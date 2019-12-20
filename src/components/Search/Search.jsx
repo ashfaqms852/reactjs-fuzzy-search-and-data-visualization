@@ -1,5 +1,5 @@
 import React from 'react';
-import { Input } from 'reactstrap';
+import { Input } from 'semantic-ui-react'
 function Search(props) {
     return (
         <Input placeholder="Search for keyword" 

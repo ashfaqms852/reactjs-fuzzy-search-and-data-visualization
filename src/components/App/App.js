@@ -1,22 +1,36 @@
 import React, { Component } from "react";
-//import "./App.css";
-import keywords from "../../keywords.json";
-import Search from '../Search/Search.jsx';
-import WordTable from '../WordTable/WordTable.jsx';
-import { Navbar, NavbarBrand, Container, Row, Col } from 'reactstrap';
+import Search from '../Search/Search';
+import DataTable from '../DataTable/DataTable';
+import { Navbar, NavbarBrand } from 'reactstrap';
+import { Container, Grid } from 'semantic-ui-react'
+import axios from 'axios';
 
 var fuzzy = require("fuzzy");
-
 
 class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      poi_data: [],
       searchWord: "",
       searchMatches: []
     };
 
     this.handleChange = this.handleChange.bind(this);
+  }
+
+  componentDidMount() {
+    axios({
+        method: 'get',      
+        url: 'http://ec2-18-218-112-222.us-east-2.compute.amazonaws.com:3000/poi',
+        headers: {'usertoken': new Date().getTime()} //add a unique token to bypass api rate limiting
+      })
+      .then(response => {
+          this.setState({
+            poi_data: response.data
+          });
+      })
+      .catch(error => console.log(error));
   }
   
 
@@ -27,12 +41,12 @@ class App extends Component {
   render() {
     
     const { searchWord } = this.state;
-    var list = keywords.keywords;
+    var list = this.state.poi_data;
     var options = {
       pre: "<b>",
       post: "</b>",
       extract: function(el) {
-        return el.action + "|~`~`|" + el.keyword;
+        return el.name + "|~`~`|" + el.lat + "|~`~`|" + el.lon;
       }
     };
 
@@ -45,18 +59,20 @@ class App extends Component {
           <NavbarBrand href="/">eqworks fuzzy search</NavbarBrand>
         </Navbar>
         <br/>
-        <Container className="themed-container" fluid="lg">
-          <Row>
-            <Col>
-              <Search handleChange={this.handleChange} searchWord={searchWord} />
-            </Col>
-          </Row>
-          <hr/>
-          <Row>
-            <Col>
-              <WordTable searchMatches={mResults} />
-            </Col>
-          </Row>
+        <Container>
+          <Grid>
+            <Grid.Row>
+              <Grid.Column>
+                <Search handleChange={this.handleChange} searchWord={searchWord} />
+              </Grid.Column>
+            </Grid.Row>
+            <br />
+            <Grid.Row>
+              <Grid.Column>
+                <DataTable searchMatches={mResults} />
+              </Grid.Column>
+            </Grid.Row>
+          </Grid>
         </Container>
       </div>
     );
